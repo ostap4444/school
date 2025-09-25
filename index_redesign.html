@@ -1,167 +1,233 @@
-<!doctype html>
+from pathlib import Path
+
+html_code = """<!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8">
-  <title>Школа Новий Яричів — Розклад</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Шкільний Бот</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
     body {
-      background: linear-gradient(135deg, #0f172a, #1e293b);
-      color: #f1f5f9;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      background-attachment: fixed;
+      color: #fff;
+      text-align: center;
+      overflow-x: hidden;
     }
+
     header {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    header h1 {
-      font-size: 1.6rem;
+      padding: 20px;
+      font-size: 1.7rem;
       font-weight: 700;
-      background: linear-gradient(90deg, #38bdf8, #6366f1);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 25px rgba(0,0,0,0.4);
+      z-index: 10;
+      position: sticky;
+      top: 0;
     }
-    nav button {
-      background: linear-gradient(90deg, #6366f1, #38bdf8);
-      border: none;
-      color: white;
-      font-weight: 600;
-      padding: 0.7rem 1.4rem;
-      margin-left: 0.5rem;
-      border-radius: 0.8rem;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      font-size: 0.95rem;
+
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
     }
-    nav button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+
+    .container {
+      padding: 25px 15px;
+      max-width: 650px;
+      margin: auto;
+      position: relative;
     }
-    main {
-      flex: 1;
-      padding: 2rem;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 1.2rem;
-      padding: 2rem;
-      max-width: 800px;
+
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 100%;
       width: 100%;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-      animation: fadeIn 0.4s ease;
+      transition: all 0.45s ease;
+      opacity: 0;
+      transform: scale(0.95);
     }
-    .card h2 {
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #93c5fd;
+
+    .screen.active {
+      left: 0;
+      opacity: 1;
+      transform: scale(1);
     }
-    .card.hidden { display: none; }
-    label { margin-right: 0.5rem; font-weight: 500; }
-    select, button#showSchedule {
-      background: rgba(255, 255, 255, 0.1);
+
+    .btn {
+      display: block;
+      margin: 15px auto;
+      padding: 16px 25px;
+      font-size: 1.1rem;
       border: none;
-      border-radius: 0.6rem;
-      padding: 0.5rem 1rem;
-      color: white;
-      margin-right: 0.5rem;
-      font-size: 0.95rem;
-      margin-top: 0.5rem;
-    }
-    button#showSchedule {
-      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #fff;
       cursor: pointer;
-      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 85%;
+      max-width: 420px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      letter-spacing: 0.5px;
     }
-    button#showSchedule:hover {
-      box-shadow: 0 4px 15px rgba(34,197,94,0.5);
+
+    .btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      background: linear-gradient(135deg, #2a5298, #1e3c72);
+      box-shadow: 0 6px 28px rgba(0,0,0,0.5);
     }
-    .bells {
-      font-size: 1rem;
-      line-height: 1.6;
-      padding-left: 1rem;
+
+    .btn:active {
+      transform: scale(0.96);
     }
-    a {
-      color: #38bdf8;
-      text-decoration: none;
-      font-weight: 600;
+
+    .card {
+      margin: 20px auto;
+      padding: 25px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 18px;
+      max-width: 600px;
+      opacity: 0;
+      transform: translateY(20px) scale(0.97);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px);
     }
-    a:hover {
-      text-decoration: underline;
+
+    .card.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+
+    .back-btn {
+      margin-top: 25px;
+      background: linear-gradient(135deg, #8e0e00, #1f1c18);
     }
   </style>
 </head>
 <body>
-<header>
-  <h1>Школа Новий Яричів</h1>
-  <nav>
-    <button onclick="showView('home')">Головна</button>
-    <button onclick="showView('rozklad')">Розклад уроків</button>
-    <button onclick="showView('bells')">Розклад дзвінків</button>
-    <button onclick="showView('support')">Підтримка</button>
-  </nav>
-</header>
+  <header>Шкільний Бот</header>
 
-<main>
-  <section id="home" class="card">
-    <h2>Ласкаво просимо!</h2>
-    <p>Виберіть вкладку щоб переглянути розклад або написати нам.</p>
-  </section>
-
-  <section id="rozklad" class="card hidden">
-    <h2>Розклад уроків</h2>
-    <div>
-      <label>Клас</label>
-      <select id="classSelect"></select>
-      <label>День</label>
-      <select id="daySelect">
-        <option value="Понеділок">Понеділок</option>
-        <option value="Вівторок">Вівторок</option>
-        <option value="Середа">Середа</option>
-        <option value="Четвер">Четвер</option>
-        <option value="П’ятниця">П’ятниця</option>
-      </select>
-      <button id="showSchedule">Показати</button>
+  <div class="container">
+    <!-- Головний екран -->
+    <div id="home" class="screen active">
+      <h2>Привіт! Це бот школи Нового Яричева!<br>Приємного користування</h2>
+      <button class="btn" onclick="navigate('menu')">Розпочати</button>
     </div>
-    <div id="scheduleContainer"></div>
-  </section>
 
-  <section id="bells" class="card hidden">
-    <h2>Розклад дзвінків</h2>
-    <div class="bells">
-      1. 8:30-9:15<br>
-      2. 9:25-10:10<br>
-      3. 10:30-11:15<br>
-      4. 11:35-12:20<br>
-      5. 12:30-13:15<br>
-      6. 13:25-14:10<br>
-      7. 14:20-15:05
+    <!-- Головне меню -->
+    <div id="menu" class="screen">
+      <button class="btn" onclick="navigate('classes')">Розклад Уроків</button>
+      <button class="btn" onclick="navigate('bells')">Розклад Дзвінків</button>
+      <a href="https://t.me/schoolyaruchiv" class="btn">Запропонувати ідею</a>
+      <button class="btn back-btn" onclick="goBack()">Назад</button>
     </div>
-  </section>
 
-  <section id="support" class="card hidden">
-    <h2>Підтримка</h2>
-    <p><a href="https://t.me/schoolyaruchiv" target="_blank">Наш Telegram канал</a></p>
-  </section>
-</main>
+    <!-- Вибір класу -->
+    <div id="classes" class="screen">
+      <h2>Виберіть клас</h2>
+      <div id="classButtons"></div>
+      <button class="btn back-btn" onclick="goBack()">Назад</button>
+    </div>
 
-<script src="script.js"></script>
+    <!-- Розклад конкретного класу -->
+    <div id="schedule" class="screen">
+      <div class="card" id="scheduleCard">
+        <h2 id="classTitle"></h2>
+        <p id="classSchedule">РОЗКЛАД</p>
+      </div>
+      <button class="btn back-btn" onclick="goBack()">Назад</button>
+    </div>
+
+    <!-- Розклад дзвінків -->
+    <div id="bells" class="screen">
+      <div class="card show">
+        <h2>Розклад Дзвінків</h2>
+        <p>
+          1. 8:30-9:15 <br>
+          2. 9:25-10:10 <br>
+          3. 10:30-11:15 <br>
+          4. 11:35-12:20 <br>
+          5. 12:30-13:15 <br>
+          6. 13:25-14:10 <br>
+          7. 14:20-15:05
+        </p>
+      </div>
+      <button class="btn back-btn" onclick="goBack()">Назад</button>
+    </div>
+  </div>
+
+  <script>
+    const schedules = {
+      "5-А": "РОЗКЛАД 5-А",
+      "5-Б": "РОЗКЛАД 5-Б",
+      "5-В": "РОЗКЛАД 5-В",
+      "6-А": "РОЗКЛАД 6-А",
+      "6-Б": "РОЗКЛАД 6-Б",
+      "6-В": "РОЗКЛАД 6-В",
+      "7-А": "РОЗКЛАД 7-А",
+      "7-Б": "РОЗКЛАД 7-Б",
+      "7-В": "РОЗКЛАД 7-В",
+      "8-А": "РОЗКЛАД 8-А",
+      "8-Б": "РОЗКЛАД 8-Б",
+      "8-В": "РОЗКЛАД 8-В",
+      "9-А": "РОЗКЛАД 9-А",
+      "9-Б": "РОЗКЛАД 9-Б",
+      "9-В": "РОЗКЛАД 9-В",
+      "10-А": "РОЗКЛАД 10-А",
+      "10-Б": "РОЗКЛАД 10-Б",
+      "11-А": "РОЗКЛАД 11-А",
+      "11-Б": "РОЗКЛАД 11-Б"
+    };
+
+    const classList = Object.keys(schedules);
+    let currentScreen = "home";
+    let historyStack = ["home"];
+
+    function navigate(target) {
+      document.getElementById(currentScreen).classList.remove("active");
+      currentScreen = target;
+      document.getElementById(currentScreen).classList.add("active");
+      historyStack.push(target);
+      if (target === "classes") renderClasses();
+    }
+
+    function goBack() {
+      if (historyStack.length > 1) {
+        document.getElementById(currentScreen).classList.remove("active");
+        historyStack.pop();
+        currentScreen = historyStack[historyStack.length - 1];
+        document.getElementById(currentScreen).classList.add("active");
+      }
+    }
+
+    function renderClasses() {
+      const container = document.getElementById("classButtons");
+      container.innerHTML = "";
+      classList.forEach(cls => {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.textContent = cls;
+        btn.onclick = () => showSchedule(cls);
+        container.appendChild(btn);
+      });
+    }
+
+    function showSchedule(cls) {
+      navigate("schedule");
+      document.getElementById("classTitle").textContent = cls;
+      document.getElementById("classSchedule").textContent = schedules[cls];
+      const card = document.getElementById("scheduleCard");
+      card.classList.remove("show");
+      setTimeout(() => card.classList.add("show"), 100);
+    }
+  </script>
 </body>
-</html>
+</html>"""
+
+file_path = Path("/mnt/data/shkilniy_bot.html")
+file_path.write_text(html_code, encoding="utf-8")
+file_path
